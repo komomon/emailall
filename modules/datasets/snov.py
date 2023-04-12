@@ -29,23 +29,26 @@ class Snov(Search):
 
         resp = self.session.get(self.addr + '/login')
         if resp:
-            token = re.findall(r'"csrf-token" content="(.*)"', resp.text)[0]
-            param = {
-                "_token": token,
-                "email": settings.snov_username,
-                "password": settings.snov_password,
-                "remember": "on"
-            }
-            if token:
-                rep = self.session.post(self.addr + '/login', data=param)
-                if 'token' in requests.utils.dict_from_cookiejar(self.session.cookies):
-                    XSRF_TOKEN = rep.cookies.get("XSRF-TOKEN")
-                    self.header.update({
-                        'X-XSRF-TOKEN': unquote(XSRF_TOKEN)
-                    })
-                    return True
-            else:
-                return
+            result = re.findall(r'"csrf-token" content="(.*)"', resp.text)
+            if len(result):
+                token = result[0]
+                param = {
+                    "_token": token,
+                    "email": settings.snov_username,
+                    "password": settings.snov_password,
+                    "remember": "on"
+                }
+                if token:
+                    rep = self.session.post(self.addr + '/login', data=param)
+                    if 'token' in requests.utils.dict_from_cookiejar(self.session.cookies):
+                        XSRF_TOKEN = rep.cookies.get("XSRF-TOKEN")
+                        self.header.update({
+                            'X-XSRF-TOKEN': unquote(XSRF_TOKEN)
+                        })
+                        return True
+                else:
+                    return
+            return
 
     def search(self):
 
